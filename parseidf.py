@@ -23,6 +23,13 @@ parses an idf file into a dictionary of lists in the following manner:
     also, all field values are strings, i.e. no interpretation of the values is
     made.
 '''
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.colors as mcolors
+import numpy as np
+import pandas as pd
+import plotly.graph_objs as go
 import ply.lex as lex
 import ply.yacc as yacc
 
@@ -174,3 +181,137 @@ def extract_zones(parsed_idf):
                 continue
     
     return zones
+
+
+def plot_2d_geometry(zones):
+    fig, ax = plt.subplots()
+
+    for zone_name, zone_info in zones.items():
+        for surface in zone_info["surfaces"]:
+            # Extract only the x and y coordinates for the 2D plot
+            vertices_2d = [(x, y) for x, y, z in surface]
+            polygon = patches.Polygon(vertices_2d, closed=True, edgecolor='r')
+            ax.add_patch(polygon)
+
+        # Calculate the centroid of the first surface to place the label
+        if zone_info["surfaces"]:
+            first_surface = zone_info["surfaces"][0]
+            centroid_x = sum(x for x, y, z in first_surface) / len(first_surface)
+            centroid_y = sum(y for x, y, z in first_surface) / len(first_surface)
+            ax.text(centroid_x, centroid_y, zone_name, ha='center', va='center', color='black', fontsize=8, bbox=dict(facecolor='white', alpha=0.6))
+
+    ax.set_xlim(0, 30)  # Adjust according to your building size
+    ax.set_ylim(0, 20)  # Adjust according to your building size
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    plt.title('2D Geometry Plot')
+    plt.show()
+
+
+def plot_3d_point_cloud(zones, point_size=4, num_points=20):
+    dense_points = []
+    zone_colors = {}
+    unique_colors = list(mcolors.TABLEAU_COLORS.values())
+
+    for i, zone_name in enumerate(zones.keys()):
+        zone_colors[zone_name] = unique_colors[i % len(unique_colors)]
+
+    for zone_name, zone_info in zones.items():
+        zone_color = zone_colors[zone_name]
+        for surface in zone_info["surfaces"]:
+            x_coords = [x for x, y, z in surface]
+            y_coords = [y for x, y, z in surface]
+            z_coords = [z for x, y, z in surface]
+
+            x_min, x_max = min(x_coords), max(x_coords)
+            y_min, y_max = min(y_coords), max(y_coords)
+            z_min, z_max = min(z_coords), max(z_coords)
+
+            x_points = np.linspace(x_min, x_max, num=num_points)
+            y_points = np.linspace(y_min, y_max, num=num_points)
+            z_points = np.linspace(z_min, z_max, num=num_points)
+
+            for x in x_points:
+                for y in y_points:
+                    for z in z_points:
+                        dense_points.append((x, y, z, zone_color))
+
+    x_vals, y_vals, z_vals, colors = zip(*dense_points)
+
+    print(f"Plotting 3D Geometry with {len(x_vals)} points...")
+    scatter = go.Scatter3d(
+        x=x_vals,
+        y=y_vals,
+        z=z_vals,
+        mode='markers',
+        marker=dict(
+            size=point_size,
+            color=colors,
+            opacity=0.7
+        )
+    )
+
+    layout = go.Layout(
+        title='3D Geometry Plot',
+        scene=dict(
+            xaxis=dict(title='X Coordinate'),
+            yaxis=dict(title='Y Coordinate'),
+            zaxis=dict(title='Z Coordinate')
+        )
+    )
+
+    fig = go.Figure(data=[scatter], layout=layout)
+    fig.show()
+
+def plot_3d_mesh(zones):
+    fig = go.Figure()
+    
+    # Define a list of colors for different zones
+    colors = ['blue', 'green', 'red', 'purple', 'orange', 'cyan', 'magenta']
+
+    for zone_index, (zone_name, zone_info) in enumerate(zones.items()):
+        color = colors[zone_index % len(colors)]  # Cycle through the colors
+
+        for surface in zone_info["surfaces"]:
+            x_coords = [x for x, y, z in surface]
+            y_coords = [y for x, y, z in surface]
+            z_coords = [z for x, y, z in surface]
+            
+            # Ensure the surface is closed by repeating the first point
+            if x_coords[0] != x_coords[-1] or y_coords[0] != y_coords[-1] or z_coords[0] != z_coords[-1]:
+                x_coords.append(x_coords[0])
+                y_coords.append(y_coords[0])
+                z_coords.append(z_coords[0])
+            
+            # Creating a triangular mesh by using indices of the vertices
+            num_vertices = len(x_coords)
+            i = []
+            j = []
+            k = []
+            for idx in range(1, num_vertices - 2):
+                i.append(0)
+                j.append(idx)
+                k.append(idx + 1)
+
+            fig.add_trace(go.Mesh3d(
+                x=x_coords,
+                y=y_coords,
+                z=z_coords,
+                i=i,
+                j=j,
+                k=k,
+                opacity=0.5,
+                color=color,
+                flatshading=True
+            ))
+
+    fig.update_layout(
+        title='3D Mesh Plot',
+        scene=dict(
+            xaxis=dict(title='X Coordinate'),
+            yaxis=dict(title='Y Coordinate'),
+            zaxis=dict(title='Z Coordinate')
+        )
+    )
+
+    fig.show()
