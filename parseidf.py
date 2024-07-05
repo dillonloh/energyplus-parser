@@ -123,3 +123,54 @@ def parse(input):
     parser = yacc.yacc()
     result = parser.parse(debug=False)
     return result
+
+
+def extract_zones(parsed_idf):
+    """
+    Extracts the zones from the parsed IDF file and returns a dictionary
+    containing the origin and surfaces of each zone.
+
+    Args:
+        parsed_idf (dict): The parsed IDF file. This should be the output of the `parse` function.
+
+    Returns:
+        dict: A dictionary containing the origin and surfaces of each zone. The dictionary is structured as follows:
+        {
+            "zone_name": {
+                "origin": (x, y, z),
+                "surfaces": [
+                    [(x1, y1, z1), (x2, y2, z2), ...],
+                    [(x1, y1, z1), (x2, y2, z2), ...],
+                    ...
+                ]
+            },
+            ...
+        }
+    """
+    zones = {}
+    for zone in parsed_idf.get('ZONE', []):
+        zone_name = zone[1]
+        zones[zone_name] = {
+            "origin": (float(zone[3]), float(zone[4]), float(zone[5])),
+            "surfaces": []
+        }
+
+    for surface in parsed_idf.get('BUILDINGSURFACE:DETAILED', []):
+        zone_name = surface[4]
+        if zone_name in zones:
+            try:
+                num_vertices_index = surface.index('4') #TODO: dynamically grab no. of vertices from the field
+                num_vertices = int(surface[num_vertices_index])
+                vertices_start_index = num_vertices_index + 1
+                vertices = []
+                for i in range(num_vertices):
+                    x = float(surface[vertices_start_index + i * 3])
+                    y = float(surface[vertices_start_index + i * 3 + 1])
+                    z = float(surface[vertices_start_index + i * 3 + 2])
+                    vertices.append((x, y, z))
+                zones[zone_name]["surfaces"].append(vertices)
+            except ValueError as e:
+                print(f"Error parsing vertices for surface {surface}: {e}")
+                continue
+    
+    return zones
