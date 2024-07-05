@@ -1,1 +1,4 @@
 ply
+numpy
+plotly
+matplotlib
