@@ -1,3 +1,12 @@
+# IDF Parser and Geometry 2D/3D Visualiser
+
+Parses an IDF file and provides a JSON-like dictionary of lists. Refer to original README below for information on format.
+
+Also provides functions to generate 2D Projections, 3D Point Clouds, and 3D Mesh visualisations of the
+geometry in the IDF file. This is the main feature that sets it apart from the original repo.
+
+
+# ORIGINAL README
 # parseidf.py
 
 Parses an IDF file (as used by EnergyPlus) into a dictionary of lists in the following manner:
