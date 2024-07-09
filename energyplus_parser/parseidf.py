@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 import numpy as np
-import pandas as pd
 import plotly.graph_objs as go
 import ply.lex as lex
 import ply.yacc as yacc
@@ -315,3 +314,5 @@ def plot_3d_mesh(zones):
     )
 
     fig.show()
+
+__all__ = ['parse', 'extract_zones', 'plot_2d_geometry', 'plot_3d_point_cloud', 'plot_3d_mesh']

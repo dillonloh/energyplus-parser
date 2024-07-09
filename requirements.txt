@@ -1,4 +1,4 @@
 ply
-numpy
+numpy < 2.0
 plotly
 matplotlib

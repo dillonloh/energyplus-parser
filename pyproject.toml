@@ -1,0 +1,32 @@
+# pyproject.toml
+
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energyplus_parser"
+version = "0.0.1"
+description = "A simple toolkit for parsing EnergyPlus IDF files and generating 2D/3D visualisations of the geometry. Based on the parseidf module by Daren Thomas."
+readme = "README.md"
+authors = [{ name = "Dillon Loh", email = "loh.dillon@gmail.com" }]
+license = { file = "LICENSE.txt" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ['simulation', 'parsing', 'energyplus', 'idf']
+dependencies = [
+    "matplotlib",
+    "ply",
+    "numpy==1.26.4",
+    "plotly"
+]
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://github.com/dillonloh/energyplus_parser"
+
+[project.scripts]
+realpython = "reader.__main__:main"
